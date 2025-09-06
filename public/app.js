@@ -79,6 +79,15 @@ async function createRoom() {
     });
   });
   // Listen for remote ICE candidates above
+
+  peerConnection.addEventListener('icecandidate', event => {
+    if (event.candidate) {
+      const db = firebase.firestore();
+      const roomRef = db.collection('rooms').doc(roomId);
+      const callerCandidatesCollection = roomRef.collection('callerCandidates');
+      callerCandidatesCollection.add(event.candidate.toJSON());
+    }
+  });
 }
 
 function joinRoom() {
@@ -136,6 +145,15 @@ async function joinRoomById(roomId) {
     };
     await roomRef.update(roomWithAnswer);
     // Code for creating SDP answer above
+
+    peerConnection.addEventListener('icecandidate', event => {
+      if (event.candidate) {
+        const db = firebase.firestore();
+        const roomRef = db.collection('rooms').doc(roomId);
+        const calleeCandidatesCollection = roomRef.collection('calleeCandidates');
+        calleeCandidatesCollection.add(event.candidate.toJSON());
+      }
+    });
   }
 }
 
@@ -219,19 +237,6 @@ function registerPeerConnectionListeners() {
       console.log('Add a track to the remoteStream:', track);
       remoteStream.addTrack(track);
     });
-  });
-
-  // Listen for local ICE candidates on the local RTCPeerConnection
-  peerConnection.addEventListener('icecandidate', event => {
-    if (!event.candidate) {
-      console.log('Got final candidate!');
-      return;
-    }
-    console.log('Got candidate: ', event.candidate);
-    const db = firebase.firestore();
-    const roomRef = db.collection('rooms').doc(roomId);
-    const callerCandidatesCollection = roomRef.collection('callerCandidates');
-    callerCandidatesCollection.add(event.candidate.toJSON());
   });
 }
 

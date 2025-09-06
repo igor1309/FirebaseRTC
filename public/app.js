@@ -199,13 +199,9 @@ async function hangUp(e) {
     const db = firebase.firestore();
     const roomRef = db.collection('rooms').doc(roomId);
     const calleeCandidates = await roomRef.collection('calleeCandidates').get();
-    calleeCandidates.forEach(async candidate => {
-      await candidate.ref.delete();
-    });
+    await Promise.all(calleeCandidates.docs.map(doc => doc.ref.delete()));
     const callerCandidates = await roomRef.collection('callerCandidates').get();
-    callerCandidates.forEach(async candidate => {
-      await candidate.ref.delete();
-    });
+    await Promise.all(callerCandidates.docs.map(doc => doc.ref.delete()));
     await roomRef.delete();
   }
 
